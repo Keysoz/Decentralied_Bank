@@ -1,4 +1,4 @@
-## Foundry
+<!-- ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
@@ -63,4 +63,31 @@ $ cast <subcommand>
 $ forge --help
 $ anvil --help
 $ cast --help
-```
+``` -->
+# 🏦 Decentralized Banking System
+
+A robust, professional-grade banking smart contract built with **Solidity** and the **Foundry** development framework. This project demonstrates core banking functionalities including deposits, withdrawals, internal transfers, and ownership management, all protected by a pause-able circuit breaker.
+
+## 🛠 Features
+- **Secure Deposits/Withdrawals**: Implements the Checks-Effects-Interactions (CEI) pattern to prevent reentrancy.
+- **Internal Transfers**: Gas-efficient balance updates between bank users.
+- **Circuit Breaker**: Owner can pause all financial transactions in case of an emergency using OpenZeppelin's `Pausable`.
+- **Advanced Testing**: 100% logic coverage using Foundry (Fuzz testing, event checking, and state-warping).
+- **Professional NatSpec**: Fully documented interfaces for better developer experience and automatic documentation generation.
+
+## 🏗 Project Structure
+- `src/`: Core logic (Bank.sol, IBank.sol, Errors.sol).
+- `test/`: Comprehensive test suite (Bank.t.sol).
+- `script/`: Deployment automation.
+- `lib/`: External dependencies (OpenZeppelin, Forge-std).
+
+## 🚀 Getting Started
+
+### Prerequisites
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) installed.
+
+### Installation
+1. Clone the repo:
+   ```bash
+   git clone [https://github.com/your-username/decentralized-bank.git](https://github.com/your-username/decentralized-bank.git)
+   cd decentralized-bank
