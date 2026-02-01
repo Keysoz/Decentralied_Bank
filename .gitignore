@@ -11,7 +11,7 @@ broadcast/
 .DS_Store
 
 # Dependencies
-lib/
+# lib/
 node_modules/
 
 # Docs
