@@ -1,0 +1,34 @@
+{
+    "extends": "solhint:default",
+    "plugins": [],
+    "rules": {
+        "func-visibility": [
+            "warn",
+            {
+                "ignoreConstructors": true
+            }
+        ],
+        "custom-errors": "error",
+        "var-name-mixedcase": "error",
+        "const-name-snakecase": "error",
+        "modifiers-order": "error",
+        "imports-on-top": "error",
+        "no-empty-blocks": "error",
+        "reason-string": [
+            "warn",
+            {
+                "maxLength": 32
+            }
+        ],
+        "quotes": [
+            "error",
+            "double"
+        ],
+        "natspec-inheritdoc": "warn",
+        "explicit-types": [
+            "error",
+            "explicit"
+        ],
+        "no-console": "warn"
+    }
+}
