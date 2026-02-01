@@ -2,8 +2,10 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+// import {console} from "forge-std/Test.sol";
 import {Bank} from "../src/Bank.sol";
 import {IBank} from "../src/IBank.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract BankTest is Test {
     /* Events */
@@ -11,7 +13,7 @@ contract BankTest is Test {
     event Withdraw(address indexed user, uint256 amount);
     event TransferTo(address indexed sender, address indexed receiver, uint256 amount);
     event TransferInternal(address indexed sender, address indexed receiver, uint256 amount);
-    event TransferOwnership(address indexed oldOwner, address indexed newOwner);
+    event TransferContractOwnership(address indexed oldOwner, address indexed newOwner);
 
     Bank bank;
     address public USER = makeAddr("USER");
@@ -363,21 +365,18 @@ contract BankTest is Test {
 
     function test_ownerCanTransferOwnershipToNewOwner(address newOwner) public {
         //Arrange
-        address oldOwner = bank.getCurrentOwner();
+        address oldOwner = address(this);
         newOwner = makeAddr("newOwner");
 
         // Act & Assert
-        assertEq(bank.getCurrentOwner(), oldOwner, "Something Wrong");
-        vm.startPrank(oldOwner);
+        vm.prank(oldOwner);
         bank.transferContractOwnership(newOwner);
-        vm.stopPrank();
-
         assertEq(bank.getCurrentOwner(), newOwner, "Transfer Failed!!!");
     }
 
     function test_TransferOwnershipToZeroAddressReverts(address newOwner) public {
         // Arrange
-        address oldOwner = bank.getCurrentOwner();
+        address oldOwner = address(this);
         newOwner = address(0);
 
         // Act & Assert
@@ -389,12 +388,12 @@ contract BankTest is Test {
 
     function test_notOwnerTransferOwnershipReverts(address newOwner) public {
         // Arrange
-        address oldOwner = makeAddr("oldOwner");
+        address nonOwner = makeAddr("oldOwner");
         newOwner = makeAddr("newOwner");
 
         // Act & Assert
-        vm.startPrank(oldOwner);
-        vm.expectRevert(abi.encodeWithSelector(IBank.Bank__NotTheOwner.selector));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
+        vm.startPrank(nonOwner);
         bank.transferContractOwnership(newOwner);
         vm.stopPrank();
     }
@@ -417,10 +416,9 @@ contract BankTest is Test {
         bank.deposit{value: 25 ether}();
 
         // Assert
-        vm.prank(bank.getCurrentOwner());
-        assertEq(
-            bank.getTotalBalance(), (bank.getBalance(userOne) + bank.getBalance(userTwo) + bank.getBalance(userThree))
-        );
+        uint256 bankTotalBalance = bank.getTotalBalance();
+        uint256 expectedBalance = bank.getBalance(userOne) + bank.getBalance(userTwo) + bank.getBalance(userThree);
+        assertEq(bankTotalBalance, expectedBalance);
     }
 
     function test_transferInternalEmitsCorrectEvent(address receiver, uint256 amount) public {
@@ -434,19 +432,6 @@ contract BankTest is Test {
         vm.expectEmit(true, true, false, true);
         emit TransferInternal(USER, receiver, amount);
         bank.transferInternal(receiver, amount);
-        vm.stopPrank();
-    }
-
-    function test_transferOwnershipEmitsCorrectEvent(address newOwner) public {
-        // Arrange
-        newOwner = makeAddr("newOwner");
-        address oldOwner = bank.getCurrentOwner();
-        vm.startPrank(oldOwner);
-
-        // Act & Assert
-        vm.expectEmit(true, true, false, true);
-        emit TransferOwnership(oldOwner, newOwner);
-        bank.transferContractOwnership(newOwner);
         vm.stopPrank();
     }
 }

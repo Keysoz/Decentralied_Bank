@@ -123,7 +123,7 @@ contract Bank is IBank, Ownable, Pausable {
 
         s_owner = newOwner;
 
-        emit TransferOwnership(oldOwner, newOwner);
+        emit OwnershipTransferred(oldOwner, newOwner);
     }
 
     /// @inheritdoc IBank

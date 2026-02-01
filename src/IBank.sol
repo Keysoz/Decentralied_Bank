@@ -28,7 +28,7 @@ interface IBank {
     event Withdraw(address indexed user, uint256 amount);
     event TransferTo(address indexed sender, address indexed receiver, uint256 amount);
     event TransferInternal(address indexed sender, address indexed receiver, uint256 amount);
-    event TransferOwnership(address indexed oldOwner, address indexed newOwner);
+    event TransferContractOwnership(address indexed oldOwner, address indexed newOwner);
 
     /* Function Signatures */
     /**
