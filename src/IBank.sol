@@ -21,7 +21,7 @@ interface IBank {
     error Bank__InsufficientBalance(uint256 available, uint256 required);
     error Bank__TransferFailed();
     error Bank__InvalidAddress(address receiver);
-    error Bank__NotTheOwner();
+    error Bank__UnauthorizedAccount(address nonOwner);
 
     /* Events */
     event Deposit(address indexed user, uint256 amount);

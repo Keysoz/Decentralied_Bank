@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 // import {console} from "forge-std/Test.sol";
 import {Bank} from "../src/Bank.sol";
 import {IBank} from "../src/IBank.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract BankTest is Test {
     /* Events */
@@ -13,7 +12,7 @@ contract BankTest is Test {
     event Withdraw(address indexed user, uint256 amount);
     event TransferTo(address indexed sender, address indexed receiver, uint256 amount);
     event TransferInternal(address indexed sender, address indexed receiver, uint256 amount);
-    event TransferContractOwnership(address indexed oldOwner, address indexed newOwner);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     Bank bank;
     address public USER = makeAddr("USER");
@@ -392,7 +391,7 @@ contract BankTest is Test {
         newOwner = makeAddr("newOwner");
 
         // Act & Assert
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
+        vm.expectRevert(abi.encodeWithSelector(IBank.Bank__UnauthorizedAccount.selector, nonOwner));
         vm.startPrank(nonOwner);
         bank.transferContractOwnership(newOwner);
         vm.stopPrank();
@@ -433,5 +432,6 @@ contract BankTest is Test {
         emit TransferInternal(USER, receiver, amount);
         bank.transferInternal(receiver, amount);
         vm.stopPrank();
+        emit OwnershipTransferred(USER, receiver);
     }
 }

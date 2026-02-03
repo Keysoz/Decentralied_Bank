@@ -14,11 +14,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {IBank} from "./IBank.sol";
 
-contract Bank is IBank, Ownable, Pausable {
+contract Bank is IBank, Pausable, ReentrancyGuard {
     /* State Variables Start */
     mapping(address => uint256) private s_addressToBalance;
     address private s_owner;
@@ -31,10 +31,17 @@ contract Bank is IBank, Ownable, Pausable {
         _;
     }
 
+    modifier onlyOwner() {
+        if (msg.sender != s_owner) revert Bank__UnauthorizedAccount(msg.sender);
+        _;
+    }
+
     /* Modifiers End */
 
     /* Functions Start */
-    constructor() Ownable(msg.sender) {}
+    constructor() {
+        s_owner = msg.sender;
+    }
 
     receive() external payable {
         deposit();
@@ -54,9 +61,9 @@ contract Bank is IBank, Ownable, Pausable {
     }
 
     /// @inheritdoc IBank
-    function withdraw(uint256 amount) public override whenNotPaused {
+    function withdraw(uint256 amount) public override whenNotPaused nonReentrant {
         address withdrawer = msg.sender;
-        uint256 withdrawerBalance = s_addressToBalance[msg.sender];
+        uint256 withdrawerBalance = s_addressToBalance[withdrawer];
 
         if (amount == 0) revert Bank__UserCantWithdrawZeroAmount();
 
@@ -64,7 +71,7 @@ contract Bank is IBank, Ownable, Pausable {
             revert Bank__InsufficientBalance(withdrawerBalance, amount);
         }
 
-        s_addressToBalance[withdrawer] -= amount;
+        s_addressToBalance[withdrawer] = withdrawerBalance - amount;
         s_totalBankBalance -= amount;
 
         (bool success,) = payable(msg.sender).call{value: amount}("");
@@ -74,23 +81,29 @@ contract Bank is IBank, Ownable, Pausable {
     }
 
     /// @inheritdoc IBank
-    function transferTo(address receiver, uint256 amount) public override whenNotPaused checkZeroAddress(receiver) {
-        address caller = msg.sender;
-        uint256 callerBalance = s_addressToBalance[msg.sender];
+    function transferTo(address receiver, uint256 amount)
+        public
+        override
+        whenNotPaused
+        checkZeroAddress(receiver)
+        nonReentrant
+    {
+        address sender = msg.sender;
+        uint256 senderBalance = s_addressToBalance[sender];
 
         if (amount == 0) revert Bank__UserCantWithdrawZeroAmount();
 
-        if (amount > callerBalance || callerBalance == 0) {
-            revert Bank__InsufficientBalance(callerBalance, amount);
+        if (amount > senderBalance || senderBalance == 0) {
+            revert Bank__InsufficientBalance(senderBalance, amount);
         }
 
-        s_addressToBalance[caller] -= amount;
+        s_addressToBalance[sender] = senderBalance - amount;
         s_totalBankBalance -= amount;
 
         (bool success,) = payable(receiver).call{value: amount}("");
         if (!success) revert Bank__TransferFailed();
 
-        emit TransferTo(caller, receiver, amount);
+        emit TransferTo(sender, receiver, amount);
     }
 
     /// @inheritdoc IBank
@@ -104,12 +117,9 @@ contract Bank is IBank, Ownable, Pausable {
         uint256 senderBalance = s_addressToBalance[msg.sender];
 
         if (amount == 0) revert Bank__UserCantWithdrawZeroAmount();
+        if (amount > senderBalance) revert Bank__InsufficientBalance(senderBalance, amount);
 
-        if (amount > senderBalance) {
-            revert Bank__InsufficientBalance(senderBalance, amount);
-        }
-
-        s_addressToBalance[sender] -= amount;
+        s_addressToBalance[sender] = senderBalance - amount;
         s_addressToBalance[receiver] += amount;
 
         emit TransferInternal(sender, receiver, amount);
@@ -123,22 +133,22 @@ contract Bank is IBank, Ownable, Pausable {
 
         s_owner = newOwner;
 
-        emit OwnershipTransferred(oldOwner, newOwner);
+        emit TransferContractOwnership(oldOwner, newOwner);
     }
 
     /// @inheritdoc IBank
-    function pause() external override onlyOwner {
+    function pause() external override onlyOwner whenNotPaused {
         _pause();
     }
 
     /// @inheritdoc IBank
-    function unpause() external override onlyOwner {
+    function unpause() external override onlyOwner whenPaused {
         _unpause();
     }
     /// @inheritdoc IBank
 
     function getTotalBalance() public view override onlyOwner returns (uint256) {
-        return address(this).balance;
+        return s_totalBankBalance;
     }
 
     /// @inheritdoc IBank
@@ -150,5 +160,6 @@ contract Bank is IBank, Ownable, Pausable {
     function getCurrentOwner() public view override returns (address) {
         return s_owner;
     }
+
     /* Functions End */
 }
