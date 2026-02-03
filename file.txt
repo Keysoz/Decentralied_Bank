@@ -1,5 +1,0 @@
-BankTest:test_withdrawEmitsCorrectEvent(uint256) (runs: 1000, μ: 59777, ~: 59789)
-BankTest:test_withdrawFromEmptyAccountRevert(uint256) (runs: 1000, μ: 19954, ~: 19954)
-BankTest:test_withdrawFullAmount(uint256) (runs: 1000, μ: 59670, ~: 59683)
-BankTest:test_withdrawIncreaseUserBalanceAndDecreaseInternalMapping(uint256) (runs: 1000, μ: 82092, ~: 82092)
-BankTest:test_withdrawPartialAmount(uint256) (runs: 1000, μ: 82284, ~: 82284)
